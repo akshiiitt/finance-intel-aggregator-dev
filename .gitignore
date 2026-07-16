@@ -1,0 +1,99 @@
+# ============================================================================
+# Core Environment and Secrets (CRITICAL)
+# ============================================================================
+.env
+.env.local
+.env.*
+!.env.example
+
+# ============================================================================
+# Dependencies and Package Manager Caches
+# ============================================================================
+node_modules/
+.npm/
+.pnpm-store/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================================================================
+# Python Stack (Sidecar - FastEmbed / ONNX)
+# ============================================================================
+# Virtual Environments
+.venv/
+venv/
+env/
+.env/
+ENV/
+
+# Python Cache & Compilation Outputs
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Poetry, Pipenv, and packaging outputs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ============================================================================
+# Go Stack (Backend API & Ingestion Workers)
+# ============================================================================
+# Compiled binaries and object files
+artifacts/go-backend/server
+artifacts/go-backend/worker
+*.out
+*.test
+*.prof
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# ============================================================================
+# TypeScript, Node.js & React Build Outputs
+# ============================================================================
+dist/
+build/
+out/
+out-tsc/
+.next/
+.turbo/
+*.tsbuildinfo
+.eslintcache
+
+# ============================================================================
+# System and Editor Specific Files
+# ============================================================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Preserve shared VSCode workspace configuration
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Local agent settings
+.claude/settings.local.json
+.claude/
+
+# ============================================================================
+# Audit Reports & Temp Files
+# ============================================================================
+financeintel-audit.html
+tmp/
+.cache/
+.local/
