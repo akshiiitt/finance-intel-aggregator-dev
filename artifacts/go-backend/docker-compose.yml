@@ -1,0 +1,72 @@
+services:
+  # ── PostgreSQL (with pgvector — needed for embedding-based dedup/search) ──────
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-financeintel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-financeintel}
+      POSTGRES_DB: ${POSTGRES_DB:-financeintel}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U financeintel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Migrations (runs once, exits) ────────────────────────────────────────────
+  migrate:
+    image: migrate/migrate:v4.18.1
+    volumes:
+      - ./migrations:/migrations
+    command: >
+      -path=/migrations
+      -database=${DATABASE_MIGRATE_URL:-postgres://financeintel:financeintel@postgres:5432/financeintel?sslmode=disable}
+      up
+    restart: on-failure
+
+  # ── Embedding sidecar (free, local, no external API) ──────────────────────────
+  # Deliberately NOT exposed on a host port — only reachable from other
+  # containers on this compose network (the api/worker services below).
+  embed-sidecar:
+    build:
+      context: ../embed-sidecar
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8900/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API Server ───────────────────────────────────────────────────────────────
+  # ENVIRONMENT=production here means API_KEY and CORS_ALLOWED_ORIGINS MUST be
+  # set in .env (env_file below) — the server refuses to start in production
+  # without an API_KEY, and CORS_ALLOWED_ORIGINS must list the real dashboard
+  # origin(s), not left at the localhost defaults.
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: server
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      embed-sidecar:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://financeintel:financeintel@postgres:5432/financeintel?sslmode=disable}
+      DATABASE_POOLER_URL: ${DATABASE_POOLER_URL:-}   # not needed in docker — no Supavisor
+      PORT: "8080"
+      EMBED_SIDECAR_URL: "http://embed-sidecar:8900"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
