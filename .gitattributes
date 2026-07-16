@@ -1,1 +1,15 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Keep LFS configuration
 zipFile.zip filter=lfs diff=lfs merge=lfs -text
+
+# ============================================================================
+# GitHub Linguist Overrides
+# By default, GitHub Linguist ignores folders named "artifacts", treating them
+# as generated build outputs. We override this here to force Linguist to analyze
+# our source code and display accurate language statistics on the repository page.
+# ============================================================================
+artifacts/**/* linguist-generated=false
+artifacts/**/* linguist-vendored=false
+artifacts/**/* linguist-documentation=false
