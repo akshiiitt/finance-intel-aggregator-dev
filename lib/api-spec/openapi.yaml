@@ -1,0 +1,1024 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: FinanceIntel API — Business & Startup News Intelligence
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: feed
+    description: News feed operations
+  - name: market
+    description: Market data operations
+  - name: workers
+    description: Worker control operations
+  - name: ipo
+    description: IPO calendar operations
+  - name: alerts
+    description: Alert rule operations
+  - name: analytics
+    description: Analytics and intelligence operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /feed:
+    get:
+      operationId: getFeed
+      tags: [feed]
+      summary: Get processed news feed
+      parameters:
+        - name: region
+          in: query
+          schema:
+            type: string
+            enum: [india, global, both]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [fiscore, recency, amount]
+            default: fiscore
+        - name: minAmountCr
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: News feed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedResponse"
+
+  /feed/{id}:
+    get:
+      operationId: getArticle
+      tags: [feed]
+      summary: Get a single article
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Article
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+        "404":
+          description: Not found
+
+  /feed/stats:
+    get:
+      operationId: getFeedStats
+      tags: [feed]
+      summary: Get feed statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedStats"
+
+  /feed/trending:
+    get:
+      operationId: getTrending
+      tags: [feed]
+      summary: Get trending topics
+      responses:
+        "200":
+          description: Trending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrendingResponse"
+
+  /feed/digest:
+    get:
+      operationId: getDigest
+      tags: [feed]
+      summary: Get today's AI briefing digest
+      responses:
+        "200":
+          description: Digest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DigestResponse"
+
+  /feed/search:
+    get:
+      operationId: searchFeed
+      tags: [feed]
+      summary: Search articles
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedResponse"
+
+  /market:
+    get:
+      operationId: getMarketData
+      tags: [market]
+      summary: Get latest market snapshots
+      responses:
+        "200":
+          description: Market data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketDataResponse"
+
+  /workers/status:
+    get:
+      operationId: getWorkerStatus
+      tags: [workers]
+      summary: Get background worker status
+      responses:
+        "200":
+          description: Worker status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkerStatus"
+
+  /workers/trigger:
+    post:
+      operationId: triggerFetch
+      tags: [workers]
+      summary: Manually trigger a news fetch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TriggerInput"
+      responses:
+        "200":
+          description: Triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TriggerResult"
+
+  /ipo:
+    get:
+      operationId: getIpoCalendar
+      tags: [ipo]
+      summary: Get IPO calendar
+      responses:
+        "200":
+          description: IPO calendar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IpoCalendarResponse"
+
+  /alerts:
+    get:
+      operationId: getAlerts
+      tags: [alerts]
+      summary: Get all alert rules
+      responses:
+        "200":
+          description: Alert rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertsResponse"
+    post:
+      operationId: createAlert
+      tags: [alerts]
+      summary: Create a new alert rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRule"
+
+  /alerts/{id}:
+    delete:
+      operationId: deleteAlert
+      tags: [alerts]
+      summary: Delete an alert rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /alerts/triggers:
+    get:
+      operationId: getAlertTriggers
+      tags: [alerts]
+      summary: Get recent alert trigger history
+      responses:
+        "200":
+          description: Recent triggers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertTriggersResponse"
+
+  /market/history:
+    get:
+      operationId: getMarketHistory
+      tags: [market]
+      summary: Historical market snapshots for sparklines (last N hours per symbol)
+      parameters:
+        - name: symbol
+          in: query
+          schema:
+            type: string
+        - name: hours
+          in: query
+          schema:
+            type: integer
+            default: 24
+      responses:
+        "200":
+          description: Market history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketHistoryResponse"
+
+  /analytics/overview:
+    get:
+      operationId: getAnalyticsOverview
+      tags: [analytics]
+      summary: Platform-wide KPIs — articles indexed, deals found, funding tracked
+      responses:
+        "200":
+          description: Analytics overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsOverview"
+
+  /analytics/funding:
+    get:
+      operationId: getFundingAnalytics
+      tags: [analytics]
+      summary: Funding aggregations — by sector, round type, monthly trend, top deals
+      responses:
+        "200":
+          description: Funding analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundingAnalytics"
+
+  /analytics/sentiment:
+    get:
+      operationId: getSentimentAnalytics
+      tags: [analytics]
+      summary: Sentiment breakdown by category (last 7 days)
+      responses:
+        "200":
+          description: Sentiment analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SentimentAnalytics"
+
+  /analytics/timeline:
+    get:
+      operationId: getTimeline
+      tags: [analytics]
+      summary: Article volume by day (last 30 days), with India/global split
+      responses:
+        "200":
+          description: Timeline
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimelineResponse"
+
+  /deals:
+    get:
+      operationId: getDeals
+      tags: [feed]
+      summary: Deal flow — funding, IPO, M&A articles with amount data
+      parameters:
+        - name: roundType
+          in: query
+          schema:
+            type: string
+        - name: minAmountCr
+          in: query
+          schema:
+            type: number
+        - name: region
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [amount, recency, fiscore]
+            default: amount
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Deal flow
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedResponse"
+
+  /entity:
+    get:
+      operationId: getEntityArticles
+      tags: [feed]
+      summary: Articles and intelligence for a specific company or investor
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 40
+      responses:
+        "200":
+          description: Entity intelligence
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Article:
+      type: object
+      required: [id, title, sourceUrl, source, region, fetchedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        summary:
+          type: ["string", "null"]
+        keyPoints:
+          type: ["string", "null"]
+        sourceUrl:
+          type: string
+        source:
+          type: string
+        sourceType:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        sentiment:
+          type: ["string", "null"]
+        sentimentScore:
+          type: ["number", "null"]
+        relevanceScore:
+          type: ["number", "null"]
+        fiScore:
+          type: ["number", "null"]
+        companies:
+          type: ["string", "null"]
+        investors:
+          type: ["string", "null"]
+        amount:
+          type: ["number", "null"]
+        currency:
+          type: ["string", "null"]
+        roundType:
+          type: ["string", "null"]
+        valuation:
+          type: ["number", "null"]
+        coverageCount:
+          type: ["integer", "null"]
+        alsoSources:
+          type: ["string", "null"]
+        aiModelUsed:
+          type: ["string", "null"]
+        publishedAt:
+          type: ["string", "null"]
+        fetchedAt:
+          type: string
+
+    FeedResponse:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Article"
+        total:
+          type: integer
+
+    FeedStats:
+      type: object
+      required: [totalArticles, todayArticles, indiaArticles, globalArticles, lastFetch]
+      properties:
+        totalArticles:
+          type: integer
+        todayArticles:
+          type: integer
+        indiaArticles:
+          type: integer
+        globalArticles:
+          type: integer
+        lastFetch:
+          type: ["string", "null"]
+        categoryCounts:
+          type: object
+          additionalProperties:
+            type: integer
+        unprocessedQueue:
+          type: integer
+        aiBreakdown:
+          type: object
+          additionalProperties:
+            type: integer
+        quota:
+          $ref: "#/components/schemas/QuotaStats"
+
+    QuotaStats:
+      type: object
+      properties:
+        geminiUsed:
+          type: integer
+        geminiLimit:
+          type: integer
+        groq8bUsed:
+          type: integer
+        groq8bLimit:
+          type: integer
+        groq70bUsed:
+          type: integer
+        groq70bLimit:
+          type: integer
+
+    TrendingTopic:
+      type: object
+      required: [term, count]
+      properties:
+        term:
+          type: string
+        count:
+          type: integer
+        isHot:
+          type: boolean
+        category:
+          type: ["string", "null"]
+
+    TrendingResponse:
+      type: object
+      required: [topics]
+      properties:
+        topics:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendingTopic"
+
+    DigestResponse:
+      type: object
+      required: [date, content, topArticles]
+      properties:
+        date:
+          type: string
+        content:
+          type: string
+        topArticles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Article"
+
+    MarketSnapshot:
+      type: object
+      required: [id, symbol, name, exchange, price, capturedAt]
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        name:
+          type: string
+        exchange:
+          type: string
+        price:
+          type: number
+        changePct:
+          type: ["number", "null"]
+        changeAbs:
+          type: ["number", "null"]
+        prevClose:
+          type: ["number", "null"]
+        capturedAt:
+          type: string
+
+    MarketDataResponse:
+      type: object
+      required: [snapshots, updatedAt]
+      properties:
+        snapshots:
+          type: array
+          items:
+            $ref: "#/components/schemas/MarketSnapshot"
+        updatedAt:
+          type: ["string", "null"]
+
+    WorkerStatus:
+      type: object
+      required: [workers, lastRun, nextRun]
+      properties:
+        workers:
+          type: array
+          items:
+            type: object
+            required: [name, status, lastRun]
+            properties:
+              name:
+                type: string
+              status:
+                type: string
+              lastRun:
+                type: ["string", "null"]
+              itemsProcessed:
+                type: ["integer", "null"]
+        lastRun:
+          type: ["string", "null"]
+        nextRun:
+          type: ["string", "null"]
+        quota:
+          $ref: "#/components/schemas/QuotaStats"
+        aiBreakdown:
+          type: object
+          additionalProperties:
+            type: integer
+
+    TriggerInput:
+      type: object
+      properties:
+        source:
+          type: string
+
+    TriggerResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        itemsFound:
+          type: ["integer", "null"]
+
+    IpoEntry:
+      type: object
+      required: [id, companyName, status]
+      properties:
+        id:
+          type: integer
+        companyName:
+          type: string
+        exchange:
+          type: ["string", "null"]
+        priceBandLow:
+          type: ["number", "null"]
+        priceBandHigh:
+          type: ["number", "null"]
+        lotSize:
+          type: ["integer", "null"]
+        openDate:
+          type: ["string", "null"]
+        closeDate:
+          type: ["string", "null"]
+        listingDate:
+          type: ["string", "null"]
+        issueSizeCr:
+          type: ["number", "null"]
+        gmp:
+          type: ["number", "null"]
+        subscriptionX:
+          type: ["number", "null"]
+        status:
+          type: string
+        sector:
+          type: ["string", "null"]
+        updatedAt:
+          type: string
+
+    IpoCalendarResponse:
+      type: object
+      required: [upcoming, open, closed, listed]
+      properties:
+        upcoming:
+          type: array
+          items:
+            $ref: "#/components/schemas/IpoEntry"
+        open:
+          type: array
+          items:
+            $ref: "#/components/schemas/IpoEntry"
+        closed:
+          type: array
+          items:
+            $ref: "#/components/schemas/IpoEntry"
+        listed:
+          type: array
+          items:
+            $ref: "#/components/schemas/IpoEntry"
+
+    AlertRule:
+      type: object
+      required: [id, name, type, conditions, isActive, triggerCount, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+        conditions:
+          type: object
+        isActive:
+          type: boolean
+        lastTriggered:
+          type: ["string", "null"]
+        triggerCount:
+          type: integer
+        createdAt:
+          type: string
+
+    AlertsResponse:
+      type: object
+      required: [alerts]
+      properties:
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertRule"
+
+    CreateAlertInput:
+      type: object
+      required: [name, type, conditions]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        conditions:
+          type: object
+
+    AlertTriggerEntry:
+      type: object
+      required: [id, alertId, articleId, title, triggeredAt]
+      properties:
+        id:
+          type: integer
+        alertId:
+          type: integer
+        articleId:
+          type: integer
+        title:
+          type: string
+        source:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        fiScore:
+          type: ["number", "null"]
+        triggeredAt:
+          type: string
+
+    AlertTriggersResponse:
+      type: object
+      required: [triggers]
+      properties:
+        triggers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertTriggerEntry"
+
+    MarketHistoryPoint:
+      type: object
+      required: [symbol, price, capturedAt]
+      properties:
+        symbol:
+          type: string
+        name:
+          type: ["string", "null"]
+        price:
+          type: number
+        changePct:
+          type: ["number", "null"]
+        changeAbs:
+          type: ["number", "null"]
+        capturedAt:
+          type: string
+
+    MarketHistoryResponse:
+      type: object
+      required: [history]
+      properties:
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/MarketHistoryPoint"
+
+    AnalyticsOverview:
+      type: object
+      required: [totalArticles, todayArticles, dealsFound, sourcesActive24h, unprocessedQueue]
+      properties:
+        totalArticles:
+          type: integer
+        todayArticles:
+          type: integer
+        indiaArticles:
+          type: integer
+        globalArticles:
+          type: integer
+        dealsFound:
+          type: integer
+        totalFundingDiscoveredCr:
+          type: number
+        avgFiScore:
+          type: number
+        sourcesActive24h:
+          type: integer
+        unprocessedQueue:
+          type: integer
+        avgCoverageCount:
+          type: number
+
+    FundingBySector:
+      type: object
+      required: [category, dealCount]
+      properties:
+        category:
+          type: string
+        dealCount:
+          type: integer
+        totalAmountCr:
+          type: number
+
+    FundingByRound:
+      type: object
+      required: [roundType, count]
+      properties:
+        roundType:
+          type: string
+        count:
+          type: integer
+        totalAmountCr:
+          type: number
+
+    MonthlyFunding:
+      type: object
+      required: [month, articleCount, dealCount]
+      properties:
+        month:
+          type: string
+        articleCount:
+          type: integer
+        dealCount:
+          type: integer
+        fundingCr:
+          type: number
+
+    TopDeal:
+      type: object
+      required: [id, title, source, sourceUrl, fetchedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        companies:
+          type: ["string", "null"]
+        investors:
+          type: ["string", "null"]
+        amount:
+          type: ["number", "null"]
+        currency:
+          type: ["string", "null"]
+        roundType:
+          type: ["string", "null"]
+        valuation:
+          type: ["number", "null"]
+        source:
+          type: string
+        sourceUrl:
+          type: string
+        fiScore:
+          type: ["number", "null"]
+        category:
+          type: ["string", "null"]
+        publishedAt:
+          type: ["string", "null"]
+        fetchedAt:
+          type: string
+
+    SourceActivity:
+      type: object
+      required: [source, count]
+      properties:
+        source:
+          type: string
+        count:
+          type: integer
+        avgFiScore:
+          type: number
+
+    FundingAnalytics:
+      type: object
+      required: [bySector, byRound, monthly, topDeals, sourceActivity]
+      properties:
+        bySector:
+          type: array
+          items:
+            $ref: "#/components/schemas/FundingBySector"
+        byRound:
+          type: array
+          items:
+            $ref: "#/components/schemas/FundingByRound"
+        monthly:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthlyFunding"
+        topDeals:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopDeal"
+        sourceActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceActivity"
+
+    SentimentByCat:
+      type: object
+      required: [category, bullish, bearish, neutral]
+      properties:
+        category:
+          type: string
+        bullish:
+          type: integer
+        bearish:
+          type: integer
+        neutral:
+          type: integer
+
+    SentimentAnalytics:
+      type: object
+      required: [byCategory, overall]
+      properties:
+        byCategory:
+          type: array
+          items:
+            $ref: "#/components/schemas/SentimentByCat"
+        overall:
+          $ref: "#/components/schemas/SentimentByCat"
+
+    DailyVolume:
+      type: object
+      required: [day, count]
+      properties:
+        day:
+          type: string
+        count:
+          type: integer
+        indiaCount:
+          type: integer
+        globalCount:
+          type: integer
+        fundingCr:
+          type: number
+
+    TimelineResponse:
+      type: object
+      required: [daily]
+      properties:
+        daily:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyVolume"
+
+    EntityResponse:
+      type: object
+      required: [name, articles, totalMentions, avgFiScore]
+      properties:
+        name:
+          type: string
+        articles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Article"
+        totalMentions:
+          type: integer
+        avgFiScore:
+          type: number
+        totalFundingCr:
+          type: number
+        sentimentBreakdown:
+          type: object
+          properties:
+            bullish:
+              type: integer
+            bearish:
+              type: integer
+            neutral:
+              type: integer
+        topCoMentioned:
+          type: array
+          items:
+            type: string
